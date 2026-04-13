@@ -17,6 +17,7 @@ B_int = None
 A_hex = None
 B_hex = None
 salt_hex = None
+salt_bytes = None
 b = None
 
 def startup():
@@ -65,10 +66,11 @@ def authenticate_first_step():
 
 @app.route('/auth_last_step', methods=['POST'])
 def authenticate_last_step():
-    # TODO CRACK THE PASSWORD FROM THE GIVEN HMAC BY THE CLIENT
+    
     data = request.get_json()
     client_HMAC = data.get('HMAC')
 
+    # ----------------------------------------------------
     global v_int, N
     n_length = (N.bit_length() + 7) // 8
     base = A_int*(v_int**1)
@@ -85,7 +87,27 @@ def authenticate_last_step():
     K_hex = hashlib.sha256(S_bytes).hexdigest()
     K_bytes = hashlib.sha256(S_bytes).digest()
 
-    generated_HMAC = hmac.new(K_bytes, bytes.fromhex(salt_hex), hashlib.sha256).hexdigest()
+    global salt_bytes
+    salt_bytes = bytes.fromhex(salt_hex)
+
+    generated_HMAC = hmac.new(K_bytes, salt_bytes, hashlib.sha256).hexdigest()
+    # ----------------------------------------------------
+    # TODO CRACK THE PASSWORD FROM THE GIVEN HMAC BY THE CLIENT
+    password_dictionary = {"password"}
+    for p in password_dictionary:
+        x_gen_hash = hashlib.sha256(salt_bytes+p.encode('ascii'))
+        xH_hex = x_gen_hash.hexdigest()
+        x = int(xH_hex,16)
+        S_gen_int = (A_int * pow(g,x,N)) % N
+        S_gen_bytes = S_gen_int.to_bytes(n_length, byteorder='big')
+        K_gen_hex = hashlib.sha256(S_gen_bytes).hexdigest()
+        K_gen_bytes = hashlib.sha256(S_gen_bytes).digest()
+        cracked_HMAC = hmac.new(K_gen_bytes, salt_bytes, hashlib.sha256).hexdigest()
+        if(cracked_HMAC == client_HMAC):
+            print(f"Password cracked: {p}")
+
+        
+    # ----------------------------------------------------
     print(f"generated_HMAC: {generated_HMAC}")
     if client_HMAC == generated_HMAC:
         return "Authentication OK", 200
