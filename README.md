@@ -6,22 +6,22 @@ v = g**x % n`
 C->S  
 `I, A = g**a % n`
 
-S->C
+S->C  
 `salt, B = g**b % n, u = 128 bit random number`
 
-C
+C  
 `x = SHA256(salt|password)
     S = B**(a + ux) % n
     K = SHA256(S)`
     
-S
+S  
 `S = (A * v ** u)**b % n
     K = SHA256(S)`
     
-C->S
+C->S  
 `Send HMAC-SHA256(K, salt)`
 
-S->C
+S->C  
 `Send "OK" if HMAC-SHA256(K, salt) validates`
 
 Note that in this protocol, the server's "B" parameter doesn't depend on the password (it's just a Diffie Hellman public key).
