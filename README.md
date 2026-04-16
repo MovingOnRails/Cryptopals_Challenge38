@@ -1,9 +1,9 @@
 ## Offline dictionary attack on simplified SRP
-`S
+`S  
 x = SHA256(salt|password)
 v = g**x % n`
 
-`C->S
+`C->S  
 I, A = g**a % n`
 
 `S->C
